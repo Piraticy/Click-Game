@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Click Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #game-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        h1 {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: fadeIn 1s ease-in;
+            z-index: 10;
+        }
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 30px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: slideIn 0.5s ease-out;
+            z-index: 10;
+        }
+        #hud p {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 300;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #hud span {
+            font-weight: bold;
+            color: #ffd700;
+        }
+        #reset {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 25px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        #reset:hover {
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+                top: 10px;
+            }
+            #hud {
+                top: 60px;
+                left: 10px;
+                gap: 15px;
+                padding: 10px;
+                flex-wrap: wrap;
+            }
+            #hud p {
+                font-size: 1rem;
+            }
+            #reset {
+                bottom: 10px;
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+        @media (max-width: 480px) {
+            #hud {
+                top: 50px;
+                left: 5px;
+                right: 5px;
+                justify-content: space-around;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Click Game</h1>
+        <div id="hud">
+            <p><i class="fas fa-star"></i> Score: <span id="score">0</span></p>
+            <p><i class="fas fa-clock"></i> Time: <span id="time">0</span>s</p>
+            <p><i class="fas fa-mouse-pointer"></i> Clicks: <span id="clicks">0</span></p>
+        </div>
+        <button id="reset">Reset Game</button>
+    </div>
+    <script src="sketch.js"></script>
+</body>
+</html>
