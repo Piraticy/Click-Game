@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#10242d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Nova Tap Arena v1.2.0</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icon-192.svg">
+    <link rel="manifest" href="./manifest.webmanifest">
     <style>
         :root {
             --bg: #0d1b22;
@@ -127,6 +132,11 @@
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.08);
             color: var(--text);
+        }
+
+        #install-app {
+            width: fit-content;
+            margin-top: 2px;
         }
 
         .section h2 {
@@ -614,6 +624,7 @@
                 <div class="pill">60-second rounds</div>
                 <div class="pill">Local multiplayer</div>
                 <div class="pill">Persistent highscores</div>
+                <button id="install-app" class="primary hidden" type="button">Install App</button>
             </div>
 
             <section class="section">
@@ -626,7 +637,7 @@
                 <ol id="highscore-list"></ol>
             </section>
 
-            <p class="meta-note"><strong>v1.2.0</strong><br>Original game by Piraticy. Nova Tap Arena is this polished local arcade edition.</p>
+            <p class="meta-note"><strong>v1.2.0</strong><br>Developer: Piraticy<br>First published: January 12, 2026</p>
         </aside>
 
         <main id="main">
@@ -676,6 +687,6 @@
         </main>
     </div>
 
-    <script src="./sketch.js?fresh=2"></script>
+    <script src="./sketch.js?fresh=3"></script>
 </body>
 </html>

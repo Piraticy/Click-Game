@@ -1,6 +1,7 @@
 const ROUND_SECONDS = 60;
 const MAX_PLAYERS = 4;
 const HIGH_SCORE_STORAGE_KEY = "nova-tap-simple-highscores-v1";
+const APP_VERSION = "1.2.0";
 
 const state = {
     phase: "lobby",
@@ -50,6 +51,7 @@ function cacheUi() {
     ui.progressBar = document.getElementById("progress-bar");
     ui.statusText = document.getElementById("status-text");
     ui.reset = document.getElementById("reset");
+    ui.installApp = document.getElementById("install-app");
     ui.hudPlayer = document.getElementById("hud-player");
     ui.hudRound = document.getElementById("hud-round");
     ui.hudScore = document.getElementById("hud-score");
@@ -130,6 +132,39 @@ function bindUi() {
     window.addEventListener("resize", () => {
         placeTarget(false);
     });
+
+    let deferredPrompt = null;
+
+    window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        deferredPrompt = event;
+        ui.installApp.classList.remove("hidden");
+    });
+
+    ui.installApp.addEventListener("click", async () => {
+        if (!deferredPrompt) {
+            setStatus("Open this game from a supported browser to install it.");
+            return;
+        }
+
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        ui.installApp.classList.add("hidden");
+    });
+
+    window.addEventListener("appinstalled", () => {
+        ui.installApp.classList.add("hidden");
+        setStatus(`Nova Tap Arena v${APP_VERSION} installed.`);
+    });
+
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("./service-worker.js?v=1.2.0").catch(() => {
+                setStatus("Install support is unavailable right now, but the game still works.");
+            });
+        });
+    }
 }
 
 function loadHighscores() {
