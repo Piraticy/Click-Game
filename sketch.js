@@ -28,6 +28,7 @@ window.addEventListener("DOMContentLoaded", () => {
     renderHighscores();
     syncLobbyTags();
     renderPlayerBoard();
+    state.roundSeconds = getSelectedRoundSeconds();
     updateHud(state.roundSeconds);
     setStatus(`Type one name and press Start Match. Default round length is ${DEFAULT_ROUND_SECONDS} seconds.`);
     updateOverlay();
@@ -73,8 +74,7 @@ function bindUi() {
     });
 
     ui.roundLength.addEventListener("change", () => {
-        const nextValue = Number(ui.roundLength.value) || DEFAULT_ROUND_SECONDS;
-        state.roundSeconds = nextValue;
+        state.roundSeconds = getSelectedRoundSeconds();
         if (state.phase === "lobby") {
             updateHud(state.roundSeconds);
             setStatus(`Round length set to ${state.roundSeconds} seconds.`);
@@ -171,7 +171,7 @@ function bindUi() {
 
     if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-            navigator.serviceWorker.register("./service-worker.js?v=1.2.0").catch(() => {
+            navigator.serviceWorker.register("./service-worker.js?v=1.2.1").catch(() => {
                 setStatus("Install support is unavailable right now, but the game still works.");
             });
         });
@@ -239,6 +239,7 @@ function updateLobbyActions() {
 }
 
 function startMatch() {
+    state.roundSeconds = getSelectedRoundSeconds();
     const pendingName = sanitizeName(ui.playerInput.value);
     if (pendingName && state.lobbyPlayers.length < MAX_PLAYERS) {
         const exists = state.lobbyPlayers.some((player) => player.toLowerCase() === pendingName.toLowerCase());
@@ -539,6 +540,10 @@ function setStatus(text) {
 
 function sanitizeName(value) {
     return value.replace(/\s+/g, " ").trim().slice(0, 18);
+}
+
+function getSelectedRoundSeconds() {
+    return Number(ui.roundLength?.value) || DEFAULT_ROUND_SECONDS;
 }
 
 function randomBetween(min, max) {
