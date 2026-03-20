@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="badge" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffe082"/>
+      <stop offset="1" stop-color="#ff9f43"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#70e1d0" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#70e1d0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="#10242d"/>
+  <circle cx="32" cy="32" r="26" fill="url(#glow)"/>
+  <rect x="22" y="8" width="20" height="48" rx="10" fill="url(#badge)"/>
+  <circle cx="32" cy="28" r="8" fill="#1b2f39"/>
+  <circle cx="32" cy="28" r="4" fill="#ffe082"/>
+</svg>

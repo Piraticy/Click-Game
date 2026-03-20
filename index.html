@@ -3,209 +3,679 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Click Game</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Nova Tap Arena v1.2.0</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
     <style>
-        html, body { height: 100%; }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            height: 100vh;
-            overflow: hidden;
-            /* Respect device safe areas (notch) */
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-        #game-container canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            /* Canvas should receive pointer events for gameplay */
-            pointer-events: auto;
-            display: block;
-        }
-        h1 {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 2.2rem;
-            text-shadow: 2px 4px 8px rgba(2,6,23,0.45);
-            animation: fadeIn 0.9s ease-in;
-            z-index: 12;
-            letter-spacing: 0.5px;
-            font-weight: 700;
-            padding-top: 6px;
-        }
-        /* HUD centered below the title */
-        #hud {
-            position: absolute;
-            top: 62px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 18px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
-            padding: 12px 18px;
-            border-radius: 16px;
-            backdrop-filter: blur(8px) saturate(120%);
-            box-shadow: 0 12px 30px rgba(2,6,23,0.35);
-            animation: slideIn 0.45s ease-out;
-            z-index: 12;
-            pointer-events: auto;
-            align-items: center;
-            min-width: 320px;
-            max-width: 80%;
-            justify-content: center;
-        }
-        #hud .kpi {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #e6eef8;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-        #hud .kpi i { color: #fff; opacity: 0.9; }
-        #hud .value { color: #ffd86b; font-weight: 700; min-width: 28px; text-align: center; }
-        /* subtle pulsing glow on score */
-        #hud .kpi.score { box-shadow: 0 6px 20px rgba(255,216,107,0.06); padding: 6px 10px; border-radius: 10px; }
-        /* Floating reset + CTA */
-        #reset {
-            position: absolute;
-            bottom: 26px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 22px;
-            background: linear-gradient(90deg, #ff8a65 0%, #ffca63 100%);
-            color: #06263b;
-            border: none;
-            border-radius: 999px;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: transform 0.18s ease, box-shadow 0.18s ease;
-            box-shadow: 0 12px 30px rgba(6,38,59,0.18);
-            z-index: 12;
-            pointer-events: auto;
-            -webkit-tap-highlight-color: transparent;
-            font-weight: 600;
-        }
-        #reset:hover {
-            transform: translateX(-50%) translateY(-2px);
-            box-shadow: 0 18px 40px rgba(6,38,59,0.22);
-        }
-        /* Small bottom info (fixed center) */
-        #info {
-            position: fixed;
-            left: 50%;
-            transform: translateX(-50%);
-            bottom: 18px;
-            background: rgba(255,255,255,0.04);
-            padding: 10px 14px;
-            border-radius: 12px;
-            font-size: 0.9rem;
-            z-index: 39;
-            color: rgba(230,238,248,0.95);
-            box-shadow: 0 8px 28px rgba(2,6,23,0.28);
-            pointer-events: none;
-        }
-        /* HUD progress integrated under KPIs */
-        #hud { flex-direction: column; padding: 14px 20px; }
-        #hud .kpiRow { display: flex; gap: 18px; align-items: center; }
-        #hudProgress { width: 100%; margin-top: 12px; }
-        #progress { height: 8px; width: 100%; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; }
-        #progress > i { display: block; height: 100%; background: linear-gradient(90deg,#ffd86b,#ff8a65); width: 0%; box-shadow: 0 6px 18px rgba(255,140,90,0.08); }
-        /* Play area rectangle */
-        #play-area {
-            position: absolute;
-            top: 150px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: min(1100px, 92%);
-            height: calc(100vh - 260px);
-            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(6,10,30,0.02));
-            border-radius: 18px;
-            border: 1px solid rgba(255,255,255,0.04);
-            box-shadow: 0 30px 60px rgba(4,10,35,0.25), inset 0 -10px 30px rgba(0,0,0,0.06);
-            overflow: hidden;
-            z-index: 8;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding-bottom: 80px; /* space for controls when pinned */
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @media (max-width: 768px) {
-            h1 { font-size: 2rem; top: 10px; }
-            #hud { top: 60px; left: 10px; transform: none; width: calc(100% - 20px); }
-            #reset { bottom: 10px; padding: 10px 20px; font-size: 0.9rem; }
+        :root {
+            --bg: #0d1b22;
+            --panel: #132832;
+            --panel-2: #1a3440;
+            --text: #f4efe7;
+            --muted: #a9bbc3;
+            --accent: #ff9f43;
+            --accent-2: #ffe082;
+            --mint: #70e1d0;
+            --danger: #ff7a6b;
         }
 
-        /* Pin controls to viewport on short screens so they remain visible */
-        @media (max-height: 720px) {
-            #reset { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 40; }
-            #info { position: fixed; bottom: 64px; left: 50%; transform: translateX(-50%); z-index: 39; }
-            #play-area { padding-bottom: 120px; height: calc(100vh - 260px); }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        @media (max-height: 520px) {
-            #reset { bottom: 12px; }
-            #info { bottom: 56px; font-size: 0.82rem; }
-            #play-area { padding-bottom: 140px; height: calc(100vh - 240px); }
+
+        body {
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--text);
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top left, rgba(255, 159, 67, 0.2), transparent 20%),
+                radial-gradient(circle at bottom right, rgba(112, 225, 208, 0.18), transparent 25%),
+                linear-gradient(135deg, #0b171d 0%, #10242d 40%, #16323f 100%);
         }
-        @media (max-width: 480px) {
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #app {
+            width: min(1400px, calc(100vw - 20px));
+            height: calc(100vh - 20px);
+            margin: 10px auto;
+            display: grid;
+            grid-template-columns: 300px minmax(0, 1fr);
+            gap: 14px;
+        }
+
+        .panel {
+            background: rgba(17, 34, 42, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.22);
+            backdrop-filter: blur(10px);
+        }
+
+        #sidebar {
+            min-height: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow: auto;
+        }
+
+        #brand {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        #brand-badge {
+            width: 54px;
+            height: 54px;
+            border-radius: 18px;
+            background: linear-gradient(180deg, var(--accent-2), var(--accent));
+            color: #1d2328;
+            font-weight: 800;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 16px 30px rgba(255, 159, 67, 0.28);
+        }
+
+        #brand-copy small {
+            display: block;
+            color: var(--mint);
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+        }
+
+        #brand-copy h1 {
+            font-size: 2.85rem;
+            line-height: 0.92;
+        }
+
+        #brand-copy p {
+            margin-top: 14px;
+            color: var(--muted);
+            line-height: 1.45;
+            font-size: 1rem;
+        }
+
+        .pill-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pill {
+            width: fit-content;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text);
+        }
+
+        .section h2 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .section p {
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        .meta-note {
+            margin-top: auto;
+            padding-top: 6px;
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.45;
+        }
+
+        .meta-note strong {
+            color: var(--text);
+        }
+
+        #highscore-list {
+            display: grid;
+            gap: 10px;
+            list-style: none;
+        }
+
+        .score-item {
+            display: grid;
+            grid-template-columns: 36px 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .score-rank {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(180deg, var(--accent-2), var(--accent));
+            color: #1d2328;
+            font-weight: 700;
+        }
+
+        .score-name {
+            font-weight: 700;
+        }
+
+        .score-meta {
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .score-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent-2);
+        }
+
+        #main {
+            min-height: 0;
+            display: grid;
+            grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+            gap: 12px;
+        }
+
+        #hud {
+            padding: 14px;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .card {
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 14px;
+        }
+
+        .label {
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.82rem;
+        }
+
+        .value {
+            margin-top: 8px;
+            font-size: 1.9rem;
+            font-weight: 800;
+        }
+
+        #progress-shell {
+            height: 32px;
+            padding: 6px;
+        }
+
+        #progress-track {
+            height: 100%;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--mint), var(--accent-2), var(--accent));
+            transition: width 0.1s linear;
+        }
+
+        #players {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            min-height: 0;
+            max-height: 128px;
+            overflow: auto;
+        }
+
+        .player-chip {
+            min-width: 160px;
+            padding: 14px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .player-chip.active {
+            border-color: rgba(255, 224, 130, 0.7);
+            box-shadow: 0 0 0 2px rgba(255, 224, 130, 0.14);
+        }
+
+        .player-chip strong {
+            display: block;
+            font-size: 1.05rem;
+            margin-bottom: 6px;
+        }
+
+        .player-chip span {
+            display: block;
+            color: var(--muted);
+        }
+
+        #arena {
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+            background:
+                radial-gradient(circle at center, rgba(255, 224, 130, 0.08), transparent 10%),
+                radial-gradient(circle at 50% 50%, rgba(112, 225, 208, 0.07), transparent 22%),
+                linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)),
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.03), rgba(255,255,255,0.03) 1px, transparent 1px, transparent 42px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.03) 1px, transparent 1px, transparent 42px);
+        }
+
+        #target {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 82px;
+            height: 82px;
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background:
+                radial-gradient(circle at 35% 35%, rgba(255, 248, 218, 0.92), rgba(255, 248, 218, 0) 24%),
+                radial-gradient(circle at center, #ffe082 0 18%, #ffb04d 19% 42%, #ff8d57 43% 63%, rgba(255, 122, 107, 0) 64% 100%);
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.08),
+                0 0 22px rgba(255, 159, 67, 0.24),
+                0 0 52px rgba(112, 225, 208, 0.16);
+            z-index: 4;
+            isolation: isolate;
+            animation: targetBreath 2.6s ease-in-out infinite;
+        }
+
+        #target::before {
+            content: "";
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            border: 3px solid rgba(112, 225, 208, 0.68);
+            opacity: 0.95;
+            animation: targetHalo 2.6s ease-in-out infinite;
+        }
+
+        #target::after {
+            content: "";
+            position: absolute;
+            inset: 35%;
+            border-radius: 50%;
+            background: rgba(13, 27, 34, 0.72);
+            box-shadow:
+                inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+                0 0 12px rgba(255, 224, 130, 0.14);
+        }
+
+        .target-core {
+            position: absolute;
+            inset: 41%;
+            border-radius: 50%;
+            background: linear-gradient(180deg, #fff8da, #ffe082);
+            box-shadow: 0 0 12px rgba(255, 224, 130, 0.32);
+            z-index: 1;
+        }
+
+        #target.hit {
+            transform: translate(-50%, -50%) scale(0.9);
+        }
+
+        .burst {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            margin-left: -5px;
+            margin-top: -5px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, #fff8da, #ff9f43);
+            box-shadow: 0 0 12px rgba(255, 159, 67, 0.45);
+            animation: burst 0.55s ease-out forwards;
+            pointer-events: none;
+        }
+
+        .plus {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            color: #fff8da;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-shadow: 0 0 18px rgba(255, 159, 67, 0.45);
+            animation: floatUp 0.6s ease-out forwards;
+            pointer-events: none;
+        }
+
+        #status {
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        #status-text {
+            color: var(--text);
+        }
+
+        #reset {
+            padding: 14px 22px;
+            border-radius: 999px;
+            background: rgba(255, 122, 107, 0.1);
+            border: 1px solid rgba(255, 122, 107, 0.4);
+            color: var(--text);
+        }
+
+        #overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(9, 18, 23, 0.76);
+            backdrop-filter: blur(8px);
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        #overlay-card {
+            width: min(100%, 760px);
+            background: rgba(21, 40, 50, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.22);
+        }
+
+        #overlay-card small {
+            color: var(--mint);
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+        }
+
+        #overlay-card h2 {
+            margin-top: 12px;
+            font-size: 2.2rem;
+            line-height: 1;
+        }
+
+        #overlay-card p {
+            margin-top: 14px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        #name-form {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        #player-input {
+            min-width: 0;
+            border-radius: 18px;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+        }
+
+        #player-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .tag button {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+        }
+
+        #results {
+            display: grid;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .result-row {
+            display: grid;
+            grid-template-columns: 38px 1fr auto auto;
+            gap: 10px;
+            align-items: center;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .result-rank {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: rgba(255, 224, 130, 0.14);
+            color: var(--accent-2);
+            font-weight: 800;
+        }
+
+        #overlay-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .primary {
+            padding: 14px 20px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, var(--accent-2), var(--accent));
+            color: #1d2328;
+            font-weight: 800;
+        }
+
+        .secondary {
+            padding: 14px 20px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        @keyframes burst {
+            from {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translate(var(--dx), var(--dy)) scale(0.3);
+            }
+        }
+
+        @keyframes floatUp {
+            from {
+                opacity: 1;
+                transform: translate(-50%, -50%) translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translate(-50%, -50%) translateY(-50px);
+            }
+        }
+
+        @keyframes targetBreath {
+            0%, 100% {
+                box-shadow:
+                    0 0 0 1px rgba(255, 255, 255, 0.08),
+                    0 0 22px rgba(255, 159, 67, 0.24),
+                    0 0 52px rgba(112, 225, 208, 0.16);
+            }
+            50% {
+                box-shadow:
+                    0 0 0 1px rgba(255, 255, 255, 0.12),
+                    0 0 30px rgba(255, 159, 67, 0.34),
+                    0 0 72px rgba(112, 225, 208, 0.22);
+            }
+        }
+
+        @keyframes targetHalo {
+            0%, 100% {
+                transform: scale(0.98);
+                opacity: 0.82;
+            }
+            50% {
+                transform: scale(1.06);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 1080px) {
+            body {
+                overflow: auto;
+            }
+
+            #app {
+                height: auto;
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 760px) {
             #hud {
-                top: 56px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: calc(100% - 30px);
-                justify-content: space-between;
-                padding: 10px 14px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
-            h1 {
-                font-size: 1.5rem;
+
+            #name-form {
+                grid-template-columns: 1fr;
             }
-            /* progress is inside HUD now */
+
+            #status {
+                flex-direction: column;
+                align-items: stretch;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <h1>Click Game</h1>
-        <div id="hud">
-            <div class="kpiRow">
-                <div class="kpi score"><i class="fas fa-star"></i><div class="label">Score</div><div class="value" id="score">0</div></div>
-                <div class="kpi"><i class="fas fa-clock"></i><div class="label">Time</div><div class="value" id="time">0</div></div>
-                <div class="kpi"><i class="fas fa-mouse-pointer"></i><div class="label">Clicks</div><div class="value" id="clicks">0</div></div>
+    <div id="app">
+        <aside id="sidebar" class="panel">
+            <div id="brand">
+                <div id="brand-badge">O</div>
+                <div id="brand-copy">
+                    <small>Local Arcade</small>
+                    <h1>Nova Tap Arena</h1>
+                    <p>Register with only a username, play a 60-second round, and pass the device for local multiplayer battles.</p>
+                </div>
             </div>
-            <div id="hudProgress"><div id="progress"><i id="progressBar"></i></div></div>
-        </div>
-        <div id="play-area">
-            <!-- p5 canvas will be attached here -->
-            <button id="reset" aria-label="Reset game">Reset</button>
-        </div>
-        <div id="info">Tap targets as they appear </div>
+
+            <div class="pill-list">
+                <div class="pill">60-second rounds</div>
+                <div class="pill">Local multiplayer</div>
+                <div class="pill">Persistent highscores</div>
+            </div>
+
+            <section class="section">
+                <h2>How It Works</h2>
+                <p>Type one name and press Start Match for solo play, or add up to four players for pass-and-play. Highest score wins.</p>
+            </section>
+
+            <section class="section">
+                <h2>Hall Of Clicks</h2>
+                <ol id="highscore-list"></ol>
+            </section>
+
+            <p class="meta-note"><strong>v1.2.0</strong><br>Original game by Piraticy. Nova Tap Arena is this polished local arcade edition.</p>
+        </aside>
+
+        <main id="main">
+            <section id="hud" class="panel">
+                <div class="card"><div class="label">Active Player</div><div class="value" id="hud-player">Waiting</div></div>
+                <div class="card"><div class="label">Round</div><div class="value" id="hud-round">0/0</div></div>
+                <div class="card"><div class="label">Score</div><div class="value" id="hud-score">0</div></div>
+                <div class="card"><div class="label">Clicks</div><div class="value" id="hud-clicks">0</div></div>
+                <div class="card"><div class="label">Time Left</div><div class="value" id="hud-time">60s</div></div>
+            </section>
+
+            <section id="progress-shell" class="panel">
+                <div id="progress-track"><div id="progress-bar"></div></div>
+            </section>
+
+            <section id="players"></section>
+
+            <section id="arena" class="panel">
+                <button id="target" type="button" aria-label="Target"><span class="target-core" aria-hidden="true"></span></button>
+
+                <div id="overlay">
+                    <div id="overlay-card">
+                        <small id="overlay-kicker">Lobby</small>
+                        <h2 id="overlay-title">Register players and start the match.</h2>
+                        <p id="overlay-copy">Type one name and press Start Match for solo play, or add more names first for pass-and-play multiplayer.</p>
+
+                        <form id="name-form">
+                            <input id="player-input" type="text" maxlength="18" placeholder="Type one name, then press Start Match" autocomplete="off">
+                            <button class="primary" type="submit">Add Player</button>
+                        </form>
+
+                        <div id="player-tags"></div>
+                        <div id="results" class="hidden"></div>
+
+                        <div id="overlay-actions">
+                            <button id="secondary-action" class="secondary" type="button">Clear Players</button>
+                            <button id="primary-action" class="primary" type="button">Start Match</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="status" class="panel">
+                <p id="status-text">Type one name and press Start Match.</p>
+                <button id="reset" type="button">Reset Session</button>
+            </section>
+        </main>
     </div>
-    <script src="sketch.js"></script>
+
+    <script src="./sketch.js?fresh=2"></script>
 </body>
 </html>
