@@ -449,6 +449,29 @@
             margin-top: 20px;
         }
 
+        .lobby-options {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .lobby-options label {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        #round-length {
+            min-width: 140px;
+            border-radius: 14px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            font: inherit;
+        }
+
         #player-input {
             min-width: 0;
             border-radius: 18px;
@@ -668,6 +691,15 @@
                             <input id="player-input" type="text" maxlength="18" placeholder="Type one name, then press Start Match" autocomplete="off">
                             <button class="primary" type="submit">Add Player</button>
                         </form>
+
+                        <div class="lobby-options">
+                            <label for="round-length">Round length</label>
+                            <select id="round-length" aria-label="Round length">
+                                <option value="60" selected>60 seconds</option>
+                                <option value="90">90 seconds</option>
+                                <option value="120">120 seconds</option>
+                            </select>
+                        </div>
 
                         <div id="player-tags"></div>
                         <div id="results" class="hidden"></div>

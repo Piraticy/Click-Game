@@ -1,4 +1,4 @@
-const ROUND_SECONDS = 60;
+const DEFAULT_ROUND_SECONDS = 60;
 const MAX_PLAYERS = 4;
 const HIGH_SCORE_STORAGE_KEY = "nova-tap-simple-highscores-v1";
 const APP_VERSION = "1.2.0";
@@ -9,6 +9,7 @@ const state = {
     matchPlayers: [],
     highscores: [],
     currentPlayerIndex: 0,
+    roundSeconds: DEFAULT_ROUND_SECONDS,
     score: 0,
     clicks: 0,
     endTime: 0,
@@ -27,8 +28,8 @@ window.addEventListener("DOMContentLoaded", () => {
     renderHighscores();
     syncLobbyTags();
     renderPlayerBoard();
-    updateHud(ROUND_SECONDS);
-    setStatus("Type one name and press Start Match.");
+    updateHud(state.roundSeconds);
+    setStatus(`Type one name and press Start Match. Default round length is ${DEFAULT_ROUND_SECONDS} seconds.`);
     updateOverlay();
     placeTarget(true);
     requestAnimationFrame(updateLobbyActions);
@@ -42,6 +43,7 @@ function cacheUi() {
     ui.playerInput = document.getElementById("player-input");
     ui.nameForm = document.getElementById("name-form");
     ui.playerTags = document.getElementById("player-tags");
+    ui.roundLength = document.getElementById("round-length");
     ui.results = document.getElementById("results");
     ui.primaryAction = document.getElementById("primary-action");
     ui.secondaryAction = document.getElementById("secondary-action");
@@ -68,6 +70,15 @@ function bindUi() {
 
     ui.playerInput.addEventListener("input", () => {
         updateLobbyActions();
+    });
+
+    ui.roundLength.addEventListener("change", () => {
+        const nextValue = Number(ui.roundLength.value) || DEFAULT_ROUND_SECONDS;
+        state.roundSeconds = nextValue;
+        if (state.phase === "lobby") {
+            updateHud(state.roundSeconds);
+            setStatus(`Round length set to ${state.roundSeconds} seconds.`);
+        }
     });
 
     ui.playerTags.addEventListener("click", (event) => {
@@ -258,12 +269,12 @@ function beginTurn(index) {
     state.currentPlayerIndex = index;
     state.score = 0;
     state.clicks = 0;
-    state.endTime = Date.now() + ROUND_SECONDS * 1000;
+        state.endTime = Date.now() + state.roundSeconds * 1000;
     placeTarget(true);
     updateOverlay();
-    updateHud(ROUND_SECONDS);
+    updateHud(state.roundSeconds);
     renderPlayerBoard();
-    setStatus(`${currentPlayer().name}, go. Hit the target as fast as you can.`);
+    setStatus(`${currentPlayer().name}, go. You have ${state.roundSeconds} seconds.`);
     tick();
 }
 
@@ -434,7 +445,7 @@ function updateHud(timeLeft) {
     ui.hudScore.textContent = state.phase === "playing" ? state.score : player ? player.score : 0;
     ui.hudClicks.textContent = state.phase === "playing" ? state.clicks : player ? player.clicks : 0;
     ui.hudTime.textContent = `${Math.max(0, timeLeft)}s`;
-    const progress = state.phase === "playing" ? ((ROUND_SECONDS - timeLeft) / ROUND_SECONDS) * 100 : 0;
+    const progress = state.phase === "playing" ? ((state.roundSeconds - timeLeft) / state.roundSeconds) * 100 : 0;
     ui.progressBar.style.width = `${Math.max(0, Math.min(100, progress))}%`;
 }
 
@@ -447,7 +458,7 @@ function updateOverlay() {
     if (state.phase === "lobby") {
         ui.overlayKicker.textContent = "Lobby";
         ui.overlayTitle.textContent = "Register players and start the match.";
-        ui.overlayCopy.textContent = "Type one name and press Start Match for solo play, or add more names first for pass-and-play multiplayer.";
+        ui.overlayCopy.textContent = `Type one name and press Start Match for solo play, or add more names first for pass-and-play multiplayer. Default round time is ${DEFAULT_ROUND_SECONDS} seconds, and you can extend it here before starting.`;
         ui.primaryAction.textContent = state.lobbyPlayers.length > 1 ? "Start Multiplayer Match" : "Start Match";
         ui.secondaryAction.textContent = "Clear Players";
         ui.results.innerHTML = "";
@@ -496,7 +507,7 @@ function resetSession() {
     state.currentPlayerIndex = 0;
     state.score = 0;
     state.clicks = 0;
-    updateHud(ROUND_SECONDS);
+    updateHud(state.roundSeconds);
     renderPlayerBoard();
     updateOverlay();
     setStatus("Back in the lobby.");
