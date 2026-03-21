@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#10242d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Nova Tap Arena v1.2.0</title>
+    <title>Nova Tap Arena v1.5.0</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icon-192.svg">
     <link rel="manifest" href="./manifest.webmanifest">
@@ -210,7 +210,7 @@
         #main {
             min-height: 0;
             display: grid;
-            grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+            grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
             gap: 12px;
         }
 
@@ -393,6 +393,186 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
+        }
+
+        #online-comms {
+            padding: 14px 16px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.3fr) minmax(240px, 0.9fr);
+            gap: 14px;
+            min-height: 0;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0)),
+                radial-gradient(circle at top left, rgba(112, 225, 208, 0.06), transparent 30%);
+        }
+
+        .comms-column {
+            min-height: 0;
+            display: grid;
+            gap: 10px;
+            align-content: start;
+        }
+
+        .comms-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .comms-head h2 {
+            font-size: 1.02rem;
+            letter-spacing: 0.01em;
+        }
+
+        .comms-copy {
+            color: var(--muted);
+            font-size: 0.84rem;
+            line-height: 1.35;
+        }
+
+        .comms-shell {
+            min-height: 0;
+            padding: 12px;
+            border-radius: 22px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025)),
+                rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.04),
+                0 12px 30px rgba(0, 0, 0, 0.14);
+        }
+
+        #chat-feed {
+            display: grid;
+            gap: 10px;
+            max-height: 164px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        #chat-feed::-webkit-scrollbar,
+        #voice-roster::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chat-feed::-webkit-scrollbar-thumb,
+        #voice-roster::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+        }
+
+        .chat-message {
+            padding: 11px 12px;
+            border-radius: 18px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02)),
+                rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .chat-message.me {
+            border-color: rgba(255, 224, 130, 0.46);
+            box-shadow:
+                0 0 0 1px rgba(255, 224, 130, 0.09),
+                0 12px 24px rgba(255, 159, 67, 0.08);
+        }
+
+        .chat-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            color: var(--muted);
+            font-size: 0.76rem;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+
+        .chat-body {
+            color: var(--text);
+            line-height: 1.42;
+            word-break: break-word;
+            font-size: 0.94rem;
+        }
+
+        #chat-form {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+        }
+
+        #chat-input {
+            min-width: 0;
+            border-radius: 16px;
+            padding: 12px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.045);
+            color: var(--text);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .voice-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #voice-roster {
+            display: grid;
+            gap: 10px;
+            max-height: 164px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .voice-member {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: center;
+            padding: 11px 12px;
+            border-radius: 18px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+                rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .voice-member strong {
+            display: block;
+            font-size: 0.95rem;
+        }
+
+        .voice-member small {
+            display: block;
+            color: var(--muted);
+            font-size: 0.82rem;
+            margin-top: 2px;
+        }
+
+        .voice-state {
+            color: var(--mint);
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            justify-self: end;
+        }
+
+        #chat-send,
+        #voice-toggle,
+        #voice-mute {
+            min-width: 120px;
+        }
+
+        #voice-toggle.primary {
+            box-shadow: 0 12px 24px rgba(255, 159, 67, 0.14);
+        }
+
+        #remote-audio {
+            display: none;
         }
 
         #status-text {
@@ -862,9 +1042,18 @@
                 grid-template-columns: 1fr;
             }
 
-            #status {
+            #status,
+            #online-comms {
                 flex-direction: column;
                 align-items: stretch;
+            }
+
+            #online-comms {
+                grid-template-columns: 1fr;
+            }
+
+            #chat-form {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -885,13 +1074,14 @@
                 <div class="pill">60-second rounds</div>
                 <div class="pill">Local multiplayer</div>
                 <div class="pill">Online rooms</div>
+                <div class="pill">Room chat + voice</div>
                 <div class="pill">Persistent highscores</div>
                 <button id="install-app" class="primary hidden" type="button">Install App</button>
             </div>
 
             <section class="section">
                 <h2>How It Works</h2>
-                <p>Play solo, add local players for pass-and-play, or create an online room with live usernames, location, and synced scores.</p>
+                <p>Play solo, add local players for pass-and-play, or create an online room with live usernames, location, room chat, voice chat, and synced scores.</p>
             </section>
 
             <section class="section">
@@ -899,7 +1089,7 @@
                 <ol id="highscore-list"></ol>
             </section>
 
-            <p class="meta-note"><strong>v1.2.0</strong><br>Developer: Piraticy<br>First published: January 12, 2026</p>
+            <p class="meta-note"><strong>v1.5.0</strong><br>Developer: Piraticy<br>First published: January 12, 2026</p>
         </aside>
 
         <main id="main">
@@ -996,9 +1186,46 @@
                 <p id="status-text">Type one name and press Start Match.</p>
                 <button id="reset" type="button">Reset Session</button>
             </section>
+
+            <section id="online-comms" class="panel hidden">
+                <div class="comms-column">
+                    <div class="comms-head">
+                        <div>
+                            <h2>Room Chat</h2>
+                            <div class="comms-copy">Quick notes, room setup, and live reactions while you play.</div>
+                        </div>
+                        <span id="chat-status" class="status-pill">Chat offline</span>
+                    </div>
+                    <div class="comms-shell">
+                        <div id="chat-feed"></div>
+                    </div>
+                    <form id="chat-form">
+                        <input id="chat-input" type="text" maxlength="240" placeholder="Send a room message" autocomplete="off">
+                        <button id="chat-send" class="secondary" type="submit">Send</button>
+                    </form>
+                </div>
+
+                <div class="comms-column">
+                    <div class="comms-head">
+                        <div>
+                            <h2>Voice Chat</h2>
+                            <div class="comms-copy">Join audio in the room and talk with players live.</div>
+                        </div>
+                        <span id="voice-status" class="status-pill">Voice off</span>
+                    </div>
+                    <div class="voice-actions">
+                        <button id="voice-toggle" class="primary" type="button">Join Voice</button>
+                        <button id="voice-mute" class="secondary" type="button">Mute Mic</button>
+                    </div>
+                    <div class="comms-shell">
+                        <div id="voice-roster"></div>
+                    </div>
+                    <div id="remote-audio"></div>
+                </div>
+            </section>
         </main>
     </div>
 
-    <script src="./sketch.js?fresh=8" defer></script>
+    <script src="./sketch.js?fresh=9" defer></script>
 </body>
 </html>
