@@ -1,4 +1,4 @@
-# Nova Tap Arena v1.2.0
+# Nova Tap Arena v1.5.0
 
 Developer: Piraticy
 
@@ -8,6 +8,9 @@ This version turns the original click game into a polished local arcade build wi
 
 - solo start with just one typed player name
 - local pass-and-play multiplayer for up to 4 players
+- online room-based multiplayer with usernames and location
+- live room text chat
+- in-room voice chat
 - real 60-second rounds
 - persistent local highscores
 - responsive fullscreen-style UI
@@ -30,14 +33,14 @@ http://127.0.0.1:3000/
 
 ## Play From Server
 
-Project Pages URL:
+Live Nova URL:
 
 ```text
-https://piraticy.github.io/Click-Game/
+https://clickga.netlify.app/
 ```
 
-If GitHub Pages is blocked on the account, deploy the same static files to Netlify or Vercel and replace the live server URL here.
+This is the current live deployment of Nova Tap Arena.
 
 ## Deploy
 
-This project is a static site, so it can be deployed directly with GitHub Pages.
+This project is a static site and can be deployed directly to Netlify, Vercel, or GitHub Pages.

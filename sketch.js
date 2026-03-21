@@ -12,10 +12,15 @@ let supabaseLoadPromise = null;
 
 const DEFAULT_ROUND_SECONDS = 60;
 const MAX_PLAYERS = 4;
+const CHAT_LIMIT = 40;
 const HIGH_SCORE_STORAGE_KEY = "nova-tap-simple-highscores-v1";
 const ONLINE_NAME_STORAGE_KEY = "nova-tap-online-name-v1";
-const APP_VERSION = "1.3.3";
+const APP_VERSION = "1.5.0";
 const LOCATION_LOOKUP_URL = "https://ipwho.is/";
+const VOICE_ICE_SERVERS = [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" }
+];
 
 const state = {
     mode: "local",
@@ -43,7 +48,12 @@ const state = {
         players: [],
         isHost: false,
         connection: "Offline",
-        syncTimer: null
+        syncTimer: null,
+        chatMessages: [],
+        peers: {},
+        localStream: null,
+        voiceEnabled: false,
+        micMuted: false
     }
 };
 
@@ -104,6 +114,17 @@ function cacheUi() {
     ui.onlineConnection = document.getElementById("online-connection");
     ui.roomBadge = document.getElementById("room-badge");
     ui.onlinePresence = document.getElementById("online-presence");
+    ui.onlineComms = document.getElementById("online-comms");
+    ui.chatStatus = document.getElementById("chat-status");
+    ui.chatFeed = document.getElementById("chat-feed");
+    ui.chatForm = document.getElementById("chat-form");
+    ui.chatInput = document.getElementById("chat-input");
+    ui.chatSend = document.getElementById("chat-send");
+    ui.voiceStatus = document.getElementById("voice-status");
+    ui.voiceToggle = document.getElementById("voice-toggle");
+    ui.voiceMute = document.getElementById("voice-mute");
+    ui.voiceRoster = document.getElementById("voice-roster");
+    ui.remoteAudio = document.getElementById("remote-audio");
 }
 
 function bindUi() {
@@ -158,6 +179,14 @@ function bindUi() {
         await joinOnlineRoom();
     });
     ui.leaveRoom.addEventListener("click", () => leaveOnlineRoom("Left the room."));
+    ui.chatForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        await sendChatMessage();
+    });
+    ui.voiceToggle.addEventListener("click", async () => {
+        await toggleVoiceChat();
+    });
+    ui.voiceMute.addEventListener("click", toggleMicMute);
 
     ui.primaryAction.addEventListener("click", () => {
         if (state.mode === "local") {
@@ -211,6 +240,9 @@ function bindUi() {
     });
 
     bindInstallFlow();
+    renderChatFeed();
+    renderVoiceRoster();
+    updateOnlineCommsUi();
 }
 
 function bindInstallFlow() {
@@ -241,7 +273,7 @@ function bindInstallFlow() {
 
     if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-            navigator.serviceWorker.register("./service-worker.js?v=1.3.3").catch(() => {
+            navigator.serviceWorker.register("./service-worker.js?v=1.5.0").catch(() => {
                 setStatus("Install support is unavailable right now, but the game still works.");
             });
         });
@@ -294,6 +326,10 @@ async function switchMode(mode) {
         return;
     }
 
+    if (mode === "local" && state.online.channel) {
+        await leaveOnlineRoom("", false);
+    }
+
     state.mode = mode;
     state.phase = "lobby";
     state.score = 0;
@@ -302,6 +338,7 @@ async function switchMode(mode) {
     updateHud(state.roundSeconds);
     updateOverlay();
     renderPlayerBoard();
+    updateOnlineCommsUi();
 
     if (mode === "online") {
         setStatus("Create or join an online room to play with friends worldwide.");
@@ -557,6 +594,12 @@ async function joinOrCreateRoom(rawRoomCode) {
         })
         .on("broadcast", { event: "room-reset" }, ({ payload }) => {
             applyOnlineRoomReset(payload);
+        })
+        .on("broadcast", { event: "chat-message" }, ({ payload }) => {
+            handleChatMessage(payload);
+        })
+        .on("broadcast", { event: "voice-signal" }, async ({ payload }) => {
+            await handleVoiceSignal(payload);
         });
 
     await channel.subscribe(async (status) => {
@@ -570,6 +613,7 @@ async function joinOrCreateRoom(rawRoomCode) {
             await sendOnlineEvent("request-sync", { requesterKey: state.online.playerKey });
             updateOverlay();
             renderPlayerBoard();
+            updateOnlineCommsUi();
             setStatus(`Connected to room ${roomCode}. Share the code and wait for the host to start.`);
             return;
         }
@@ -591,6 +635,8 @@ async function leaveOnlineRoom(statusText = "", resetMode = true) {
         state.online.syncTimer = null;
     }
 
+    await disableVoiceChat("", true);
+
     if (state.online.channel) {
         try {
             await state.online.channel.untrack();
@@ -605,10 +651,14 @@ async function leaveOnlineRoom(statusText = "", resetMode = true) {
     state.online.players = [];
     state.online.roomCode = "";
     state.online.isHost = false;
+    state.online.chatMessages = [];
     state.startedAt = 0;
     ui.roomBadge.classList.add("hidden");
     ui.leaveRoom.classList.add("hidden");
     updateConnectionStatus("Offline");
+    renderChatFeed();
+    renderVoiceRoster();
+    updateOnlineCommsUi();
 
     if (resetMode) {
         state.phase = "lobby";
@@ -636,8 +686,14 @@ function handlePresenceSync(channel) {
     state.online.players = players;
     state.online.isHost = players[0]?.key === state.online.playerKey;
     updateConnectionStatus(players.length ? `${players.length} online` : "Connected");
+    pruneVoicePeers(players);
     renderPlayerBoard();
     renderOnlinePresence();
+    renderVoiceRoster();
+    updateOnlineCommsUi();
+    if (state.online.voiceEnabled) {
+        ensureVoiceConnections();
+    }
     updateOverlay();
 }
 
@@ -976,7 +1032,7 @@ function renderOnlinePlayerBoard() {
             <div class="player-chip ${active ? "active" : ""}">
                 <strong>${escapeHtml(player.username)}</strong>
                 <span>${escapeHtml(player.location)}</span>
-                <span>${player.score || 0} pts · ${player.clicks || 0} clicks</span>
+                <span>${player.score || 0} pts · ${player.clicks || 0} clicks${player.voiceOn ? ` · ${player.micMuted ? "muted" : "voice"}` : ""}</span>
             </div>
         `;
     }).join("");
@@ -1003,7 +1059,7 @@ function renderOnlinePresence() {
         <div class="presence-row">
             <div>
                 <strong>${escapeHtml(player.username)}${player.key === state.online.players[0]?.key ? " (Host)" : ""}</strong>
-                <small>${escapeHtml(player.location)}</small>
+                <small>${escapeHtml(player.location)}${player.voiceOn ? ` · ${player.micMuted ? "voice muted" : "voice live"}` : ""}</small>
             </div>
             <span class="presence-state">${escapeHtml(player.phase || "lobby")}</span>
             <span>${player.score || 0} pts</span>
@@ -1043,6 +1099,7 @@ function updateOverlay() {
     ui.overlay.classList.toggle("hidden", state.phase === "playing");
     ui.results.classList.toggle("hidden", state.phase === "lobby");
     ui.overlayCard.classList.toggle("compact", state.mode === "online" && state.phase === "lobby");
+    updateOnlineCommsUi();
 
     if (state.mode === "online") {
         updateOnlineOverlay();
@@ -1097,7 +1154,7 @@ function updateOnlineOverlay() {
         ui.overlayTitle.textContent = state.online.roomCode
             ? `Room ${state.online.roomCode} is ready.`
             : "Create or join an online room.";
-        ui.overlayCopy.textContent = `Play with friends in different countries. Your room shows your username and approximate location: ${state.online.username || "your username"} from ${state.online.location}.`;
+        ui.overlayCopy.textContent = `Play with friends in different countries. Your room shows your username and approximate location, and now includes live room chat plus voice chat when you join audio.`;
         ui.primaryAction.textContent = state.online.isHost ? "Start Online Match" : "Waiting For Host";
         ui.primaryAction.disabled = !state.online.channel || !state.online.isHost;
         ui.secondaryAction.textContent = state.online.channel ? "Leave Room" : "Switch To Local";
@@ -1220,6 +1277,355 @@ function updateConnectionStatus(text) {
     ui.onlineConnection.textContent = text;
 }
 
+function updateOnlineCommsUi() {
+    const onlineVisible = state.mode === "online";
+    ui.onlineComms.classList.toggle("hidden", !onlineVisible);
+
+    const inRoom = Boolean(state.online.channel);
+    ui.chatStatus.textContent = inRoom ? `Chat live · ${state.online.roomCode}` : "Chat offline";
+    ui.chatInput.disabled = !inRoom;
+    ui.chatSend.disabled = !inRoom;
+    ui.chatInput.placeholder = inRoom ? "Send a room message" : "Join a room to chat";
+
+    ui.voiceToggle.disabled = !inRoom || !supportsVoiceChat();
+    ui.voiceMute.disabled = !inRoom || !state.online.voiceEnabled;
+    ui.voiceToggle.textContent = state.online.voiceEnabled ? "Leave Voice" : "Join Voice";
+    ui.voiceMute.textContent = state.online.micMuted ? "Unmute Mic" : "Mute Mic";
+    ui.voiceStatus.textContent = !supportsVoiceChat()
+        ? "Voice unsupported"
+        : state.online.voiceEnabled
+            ? (state.online.micMuted ? "Mic muted" : "Voice live")
+            : "Voice off";
+}
+
+function supportsVoiceChat() {
+    return Boolean(
+        window.RTCPeerConnection &&
+        navigator.mediaDevices &&
+        typeof navigator.mediaDevices.getUserMedia === "function"
+    );
+}
+
+function pruneVoicePeers(players) {
+    const activeKeys = new Set(players.filter((player) => player.voiceOn).map((player) => player.key));
+    for (const peerKey of Object.keys(state.online.peers)) {
+        if (!activeKeys.has(peerKey)) {
+            cleanupVoicePeer(peerKey);
+        }
+    }
+}
+
+async function sendChatMessage() {
+    if (!state.online.channel) {
+        setStatus("Join an online room to use chat.");
+        return;
+    }
+
+    const text = sanitizeChatMessage(ui.chatInput.value);
+    if (!text) {
+        return;
+    }
+
+    ui.chatInput.value = "";
+    await sendOnlineEvent("chat-message", {
+        id: createId(),
+        roomCode: state.online.roomCode,
+        username: state.online.username || "Guest",
+        location: state.online.location,
+        text,
+        sentAt: new Date().toISOString(),
+        playerKey: state.online.playerKey
+    });
+}
+
+function handleChatMessage(payload) {
+    if (!payload || payload.roomCode !== state.online.roomCode) {
+        return;
+    }
+
+    state.online.chatMessages.push(payload);
+    state.online.chatMessages = state.online.chatMessages.slice(-CHAT_LIMIT);
+    renderChatFeed();
+}
+
+function renderChatFeed() {
+    if (!state.online.chatMessages.length) {
+        ui.chatFeed.innerHTML = `
+            <div class="chat-message">
+                <div class="chat-meta">
+                    <span>Room chat</span>
+                    <span>Idle</span>
+                </div>
+                <div class="chat-body">Join a room to start chatting with players in real time.</div>
+            </div>
+        `;
+        return;
+    }
+
+    ui.chatFeed.innerHTML = state.online.chatMessages.map((message) => `
+        <div class="chat-message ${message.playerKey === state.online.playerKey ? "me" : ""}">
+            <div class="chat-meta">
+                <span>${escapeHtml(message.username)} · ${escapeHtml(message.location || "Room")}</span>
+                <span>${formatTime(message.sentAt)}</span>
+            </div>
+            <div class="chat-body">${escapeHtml(message.text)}</div>
+        </div>
+    `).join("");
+
+    ui.chatFeed.scrollTop = ui.chatFeed.scrollHeight;
+}
+
+async function toggleVoiceChat() {
+    if (!state.online.channel) {
+        setStatus("Join an online room before enabling voice chat.");
+        return;
+    }
+
+    if (!supportsVoiceChat()) {
+        setStatus("Voice chat is not supported in this browser.");
+        updateOnlineCommsUi();
+        return;
+    }
+
+    if (state.online.voiceEnabled) {
+        await disableVoiceChat("Voice chat disconnected.");
+        return;
+    }
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        state.online.localStream = stream;
+        state.online.voiceEnabled = true;
+        state.online.micMuted = false;
+        await syncOnlinePresence(true);
+        await ensureVoiceConnections();
+        renderVoiceRoster();
+        updateOnlineCommsUi();
+        setStatus("Voice chat connected. You can now talk to room members.");
+    } catch {
+        setStatus("Microphone access was blocked. Allow mic access to use voice chat.");
+        updateOnlineCommsUi();
+    }
+}
+
+function toggleMicMute() {
+    if (!state.online.localStream) {
+        return;
+    }
+
+    state.online.micMuted = !state.online.micMuted;
+    state.online.localStream.getAudioTracks().forEach((track) => {
+        track.enabled = !state.online.micMuted;
+    });
+    syncOnlinePresence(true);
+    renderVoiceRoster();
+    updateOnlineCommsUi();
+}
+
+async function disableVoiceChat(statusText = "", preservePeers = false) {
+    if (state.online.localStream) {
+        state.online.localStream.getTracks().forEach((track) => track.stop());
+    }
+    state.online.localStream = null;
+    state.online.voiceEnabled = false;
+    state.online.micMuted = false;
+
+    if (!preservePeers) {
+        for (const peerKey of Object.keys(state.online.peers)) {
+            cleanupVoicePeer(peerKey);
+        }
+    } else {
+        for (const peerKey of Object.keys(state.online.peers)) {
+            cleanupVoicePeer(peerKey);
+        }
+    }
+
+    if (state.online.channel) {
+        await syncOnlinePresence(true);
+    }
+
+    renderVoiceRoster();
+    updateOnlineCommsUi();
+    if (statusText) {
+        setStatus(statusText);
+    }
+}
+
+async function ensureVoiceConnections() {
+    if (!state.online.voiceEnabled || !state.online.channel) {
+        return;
+    }
+
+    const peersToConnect = state.online.players.filter((player) =>
+        player.key !== state.online.playerKey &&
+        player.voiceOn &&
+        state.online.playerKey < player.key &&
+        !state.online.peers[player.key]
+    );
+
+    for (const player of peersToConnect) {
+        await createVoiceOffer(player.key);
+    }
+
+    renderVoiceRoster();
+}
+
+function createVoicePeer(peerKey) {
+    if (state.online.peers[peerKey]?.pc) {
+        return state.online.peers[peerKey].pc;
+    }
+
+    const pc = new RTCPeerConnection({ iceServers: VOICE_ICE_SERVERS });
+    const peerState = { pc, audioEl: null };
+    state.online.peers[peerKey] = peerState;
+
+    if (state.online.localStream) {
+        state.online.localStream.getTracks().forEach((track) => {
+            pc.addTrack(track, state.online.localStream);
+        });
+    }
+
+    pc.onicecandidate = ({ candidate }) => {
+        if (!candidate || !state.online.channel) {
+            return;
+        }
+
+        sendOnlineEvent("voice-signal", {
+            roomCode: state.online.roomCode,
+            to: peerKey,
+            from: state.online.playerKey,
+            kind: "ice",
+            candidate: candidate.toJSON ? candidate.toJSON() : candidate
+        });
+    };
+
+    pc.ontrack = ({ streams }) => {
+        attachRemoteAudio(peerKey, streams[0]);
+    };
+
+    pc.onconnectionstatechange = () => {
+        if (["failed", "closed"].includes(pc.connectionState)) {
+            cleanupVoicePeer(peerKey);
+        }
+        renderVoiceRoster();
+    };
+
+    return pc;
+}
+
+async function createVoiceOffer(peerKey) {
+    const pc = createVoicePeer(peerKey);
+    const offer = await pc.createOffer({ offerToReceiveAudio: true });
+    await pc.setLocalDescription(offer);
+    await sendOnlineEvent("voice-signal", {
+        roomCode: state.online.roomCode,
+        to: peerKey,
+        from: state.online.playerKey,
+        kind: "offer",
+        description: pc.localDescription
+    });
+}
+
+async function handleVoiceSignal(payload) {
+    if (!payload || payload.roomCode !== state.online.roomCode || payload.to !== state.online.playerKey || payload.from === state.online.playerKey) {
+        return;
+    }
+
+    if (!supportsVoiceChat()) {
+        return;
+    }
+
+    const pc = createVoicePeer(payload.from);
+
+    if (payload.kind === "offer") {
+        await pc.setRemoteDescription(payload.description);
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        await sendOnlineEvent("voice-signal", {
+            roomCode: state.online.roomCode,
+            to: payload.from,
+            from: state.online.playerKey,
+            kind: "answer",
+            description: pc.localDescription
+        });
+        return;
+    }
+
+    if (payload.kind === "answer") {
+        await pc.setRemoteDescription(payload.description);
+        return;
+    }
+
+    if (payload.kind === "ice" && payload.candidate) {
+        try {
+            await pc.addIceCandidate(payload.candidate);
+        } catch {}
+    }
+}
+
+function attachRemoteAudio(peerKey, stream) {
+    let peerState = state.online.peers[peerKey];
+    if (!peerState) {
+        peerState = { pc: null, audioEl: null };
+        state.online.peers[peerKey] = peerState;
+    }
+
+    if (!peerState.audioEl) {
+        const audio = document.createElement("audio");
+        audio.autoplay = true;
+        audio.playsInline = true;
+        audio.dataset.peerKey = peerKey;
+        ui.remoteAudio.appendChild(audio);
+        peerState.audioEl = audio;
+    }
+
+    peerState.audioEl.srcObject = stream;
+}
+
+function cleanupVoicePeer(peerKey) {
+    const peerState = state.online.peers[peerKey];
+    if (!peerState) {
+        return;
+    }
+
+    try {
+        peerState.pc?.close();
+    } catch {}
+
+    if (peerState.audioEl) {
+        peerState.audioEl.srcObject = null;
+        peerState.audioEl.remove();
+    }
+
+    delete state.online.peers[peerKey];
+}
+
+function renderVoiceRoster() {
+    const voicePlayers = sortedOnlinePlayers().filter((player) => player.voiceOn);
+    if (!voicePlayers.length) {
+        ui.voiceRoster.innerHTML = `
+            <div class="voice-member">
+                <div>
+                    <strong>No live voice members</strong>
+                    <small>Join voice chat to talk inside the room.</small>
+                </div>
+                <span class="voice-state">Idle</span>
+            </div>
+        `;
+        return;
+    }
+
+    ui.voiceRoster.innerHTML = voicePlayers.map((player) => `
+        <div class="voice-member">
+            <div>
+                <strong>${escapeHtml(player.username)}${player.key === state.online.playerKey ? " (You)" : ""}</strong>
+                <small>${escapeHtml(player.location)}</small>
+            </div>
+            <span class="voice-state">${player.micMuted ? "Muted" : "Live"}</span>
+        </div>
+    `).join("");
+}
+
 async function ensureSupabaseReady() {
     if (supabaseClient) {
         if (state.online.connection === "Offline" || state.online.connection === "Unavailable") {
@@ -1332,7 +1738,9 @@ async function syncOnlinePresence(force = false) {
         joinedAt: state.online.joinedAt || new Date().toISOString(),
         phase: state.phase,
         score: state.score,
-        clicks: state.clicks
+        clicks: state.clicks,
+        voiceOn: state.online.voiceEnabled,
+        micMuted: state.online.micMuted
     };
 
     try {
@@ -1362,6 +1770,10 @@ function sanitizeName(value) {
     return (value || "").replace(/\s+/g, " ").trim().slice(0, 18);
 }
 
+function sanitizeChatMessage(value) {
+    return (value || "").replace(/\s+/g, " ").trim().slice(0, 240);
+}
+
 function sanitizeRoomCode(value) {
     return (value || "")
         .toUpperCase()
@@ -1387,6 +1799,11 @@ function createId() {
 
 function randomBetween(min, max) {
     return Math.random() * (max - min) + min;
+}
+
+function formatTime(value) {
+    const date = value ? new Date(value) : new Date();
+    return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
 function escapeHtml(value) {

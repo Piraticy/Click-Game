@@ -1,7 +1,7 @@
 {
   "name": "Nova Tap Arena",
   "short_name": "Nova Tap",
-  "description": "A polished local arcade click game by Piraticy.",
+  "description": "A polished arcade click game by Piraticy with online rooms, chat, and voice.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
