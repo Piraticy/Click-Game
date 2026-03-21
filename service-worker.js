@@ -1,4 +1,4 @@
-const CACHE_NAME = "nova-tap-arena-v1-3-1";
+const CACHE_NAME = "nova-tap-arena-v1-3-2";
 const APP_SHELL = [
     "./",
     "./index.html",
