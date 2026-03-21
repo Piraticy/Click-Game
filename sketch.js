@@ -1,14 +1,14 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
 const SUPABASE_URL = "https://arqfifaxjuranixigqbu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFycWZpZmF4anVyYW5peGlncWJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwODA1MjEsImV4cCI6MjA4OTY1NjUyMX0.jTm1EP8R9arPf9ZDexxWZBle9jINFS25MTDIDEP5LY8";
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase?.createClient
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
 
 const DEFAULT_ROUND_SECONDS = 60;
 const MAX_PLAYERS = 4;
 const HIGH_SCORE_STORAGE_KEY = "nova-tap-simple-highscores-v1";
 const ONLINE_NAME_STORAGE_KEY = "nova-tap-online-name-v1";
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.3.1";
 const LOCATION_LOOKUP_URL = "https://ipwho.is/";
 
 const state = {
@@ -199,6 +199,15 @@ function bindUi() {
     });
 
     bindInstallFlow();
+
+    if (!supabase) {
+        ui.modeOnline.disabled = true;
+        ui.modeOnline.title = "Online mode is unavailable because the realtime library did not load.";
+        ui.createRoom.disabled = true;
+        ui.joinRoom.disabled = true;
+        ui.leaveRoom.disabled = true;
+        ui.onlineConnection.textContent = "Unavailable";
+    }
 }
 
 function bindInstallFlow() {
@@ -229,7 +238,7 @@ function bindInstallFlow() {
 
     if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-            navigator.serviceWorker.register("./service-worker.js?v=1.3.0").catch(() => {
+            navigator.serviceWorker.register("./service-worker.js?v=1.3.1").catch(() => {
                 setStatus("Install support is unavailable right now, but the game still works.");
             });
         });
@@ -270,6 +279,11 @@ function fallbackLocation() {
 }
 
 function switchMode(mode) {
+    if (mode === "online" && !supabase) {
+        setStatus("Online mode is unavailable right now. Refresh the page and try again.");
+        return;
+    }
+
     if (state.phase === "playing") {
         setStatus("Finish the current match before switching modes.");
         return;
@@ -465,15 +479,30 @@ function beginLocalTurn(index) {
 }
 
 async function createOnlineRoom() {
+    if (!supabase) {
+        setStatus("Online mode is unavailable right now. Refresh the page and try again.");
+        return;
+    }
+
     ui.roomCodeInput.value = generateRoomCode();
     await joinOrCreateRoom(ui.roomCodeInput.value);
 }
 
 async function joinOnlineRoom() {
+    if (!supabase) {
+        setStatus("Online mode is unavailable right now. Refresh the page and try again.");
+        return;
+    }
+
     await joinOrCreateRoom(ui.roomCodeInput.value);
 }
 
 async function joinOrCreateRoom(rawRoomCode) {
+    if (!supabase) {
+        setStatus("Online mode is unavailable right now. Refresh the page and try again.");
+        return;
+    }
+
     const username = sanitizeName(ui.onlineName.value);
     const roomCode = sanitizeRoomCode(rawRoomCode);
 
