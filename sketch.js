@@ -1,11 +1,11 @@
 const SUPABASE_URL = "https://arqfifaxjuranixigqbu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFycWZpZmF4anVyYW5peGlncWJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwODA1MjEsImV4cCI6MjA4OTY1NjUyMX0.jTm1EP8R9arPf9ZDexxWZBle9jINFS25MTDIDEP5LY8";
 const SUPABASE_CDN_URLS = [
-    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
-    "https://unpkg.com/@supabase/supabase-js@2"
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js",
+    "https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"
 ];
 
-let supabase = window.supabase?.createClient
+let supabaseClient = window.supabase?.createClient
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     : null;
 let supabaseLoadPromise = null;
@@ -14,7 +14,7 @@ const DEFAULT_ROUND_SECONDS = 60;
 const MAX_PLAYERS = 4;
 const HIGH_SCORE_STORAGE_KEY = "nova-tap-simple-highscores-v1";
 const ONLINE_NAME_STORAGE_KEY = "nova-tap-online-name-v1";
-const APP_VERSION = "1.3.2";
+const APP_VERSION = "1.3.3";
 const LOCATION_LOOKUP_URL = "https://ipwho.is/";
 
 const state = {
@@ -241,7 +241,7 @@ function bindInstallFlow() {
 
     if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-            navigator.serviceWorker.register("./service-worker.js?v=1.3.2").catch(() => {
+            navigator.serviceWorker.register("./service-worker.js?v=1.3.3").catch(() => {
                 setStatus("Install support is unavailable right now, but the game still works.");
             });
         });
@@ -533,7 +533,7 @@ async function joinOrCreateRoom(rawRoomCode) {
     ui.roomBadge.classList.remove("hidden");
     ui.roomBadge.textContent = `Room ${roomCode}`;
 
-    const channel = supabase.channel(`room:${roomCode}`, {
+    const channel = supabaseClient.channel(`room:${roomCode}`, {
         config: {
             broadcast: { self: true },
             presence: { key: state.online.playerKey }
@@ -1221,7 +1221,7 @@ function updateConnectionStatus(text) {
 }
 
 async function ensureSupabaseReady() {
-    if (supabase) {
+    if (supabaseClient) {
         if (state.online.connection === "Offline" || state.online.connection === "Unavailable") {
             updateConnectionStatus("Ready");
         }
@@ -1232,7 +1232,7 @@ async function ensureSupabaseReady() {
     setStatus("Loading online services...");
 
     try {
-        supabase = await loadSupabaseClient();
+        supabaseClient = await loadSupabaseClient();
         updateConnectionStatus("Ready");
         return true;
     } catch {
@@ -1243,8 +1243,8 @@ async function ensureSupabaseReady() {
 }
 
 async function loadSupabaseClient() {
-    if (supabase) {
-        return supabase;
+    if (supabaseClient) {
+        return supabaseClient;
     }
 
     if (supabaseLoadPromise) {
