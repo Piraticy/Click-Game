@@ -59,7 +59,7 @@
             height: calc(100vh - 20px);
             margin: 10px auto;
             display: grid;
-            grid-template-columns: 300px minmax(0, 1fr);
+            grid-template-columns: 272px minmax(0, 1fr);
             gap: 14px;
         }
 
@@ -73,23 +73,23 @@
 
         #sidebar {
             min-height: 0;
-            padding: 20px;
+            padding: 18px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
             overflow: auto;
         }
 
         #brand {
             display: flex;
-            gap: 14px;
+            gap: 12px;
             align-items: flex-start;
         }
 
         #brand-badge {
-            width: 54px;
-            height: 54px;
-            border-radius: 18px;
+            width: 46px;
+            height: 46px;
+            border-radius: 15px;
             background: linear-gradient(180deg, var(--accent-2), var(--accent));
             color: #1d2328;
             font-weight: 800;
@@ -103,35 +103,36 @@
             color: var(--mint);
             text-transform: uppercase;
             letter-spacing: 0.18em;
-            font-size: 0.75rem;
-            margin-bottom: 10px;
+            font-size: 0.72rem;
+            margin-bottom: 8px;
         }
 
         #brand-copy h1 {
-            font-size: 2.85rem;
+            font-size: 2.45rem;
             line-height: 0.92;
         }
 
         #brand-copy p {
-            margin-top: 14px;
+            margin-top: 12px;
             color: var(--muted);
-            line-height: 1.45;
-            font-size: 1rem;
+            line-height: 1.38;
+            font-size: 0.95rem;
         }
 
         .pill-list {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         .pill {
             width: fit-content;
-            padding: 10px 16px;
+            padding: 8px 14px;
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.08);
             color: var(--text);
+            font-size: 0.95rem;
         }
 
         #install-app {
@@ -140,21 +141,22 @@
         }
 
         .section h2 {
-            font-size: 1rem;
-            margin-bottom: 8px;
+            font-size: 0.96rem;
+            margin-bottom: 6px;
         }
 
         .section p {
             color: var(--muted);
-            line-height: 1.45;
+            line-height: 1.38;
+            font-size: 0.95rem;
         }
 
         .meta-note {
             margin-top: auto;
-            padding-top: 6px;
+            padding-top: 4px;
             color: var(--muted);
-            font-size: 0.88rem;
-            line-height: 1.45;
+            font-size: 0.82rem;
+            line-height: 1.35;
         }
 
         .meta-note strong {
@@ -163,24 +165,24 @@
 
         #highscore-list {
             display: grid;
-            gap: 10px;
+            gap: 8px;
             list-style: none;
         }
 
         .score-item {
             display: grid;
-            grid-template-columns: 36px 1fr auto;
-            gap: 12px;
+            grid-template-columns: 34px 1fr auto;
+            gap: 10px;
             align-items: center;
-            padding: 12px 14px;
-            border-radius: 18px;
+            padding: 10px 12px;
+            border-radius: 16px;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .score-rank {
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             display: grid;
             place-items: center;
@@ -191,15 +193,16 @@
 
         .score-name {
             font-weight: 700;
+            font-size: 0.96rem;
         }
 
         .score-meta {
             color: var(--muted);
-            font-size: 0.88rem;
+            font-size: 0.82rem;
         }
 
         .score-value {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 800;
             color: var(--accent-2);
         }
@@ -417,11 +420,19 @@
 
         #overlay-card {
             width: min(100%, 760px);
+            max-height: min(100%, 720px);
             background: rgba(21, 40, 50, 0.96);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 28px;
             padding: 24px;
             box-shadow: 0 24px 50px rgba(0, 0, 0, 0.22);
+            overflow-y: auto;
+        }
+
+        #overlay-card.compact {
+            width: min(100%, 720px);
+            max-height: min(100%, 660px);
+            padding: 20px;
         }
 
         #overlay-card small {
@@ -436,10 +447,30 @@
             line-height: 1;
         }
 
+        #overlay-card.compact h2 {
+            margin-top: 10px;
+            font-size: 1.8rem;
+        }
+
         #overlay-card p {
             margin-top: 14px;
             color: var(--muted);
             line-height: 1.5;
+        }
+
+        #overlay-card.compact p {
+            margin-top: 10px;
+            font-size: 0.98rem;
+            line-height: 1.35;
+        }
+
+        #overlay-card::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        #overlay-card::-webkit-scrollbar-thumb {
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
         }
 
         #name-form {
@@ -447,6 +478,37 @@
             grid-template-columns: 1fr auto;
             gap: 12px;
             margin-top: 20px;
+        }
+
+        .mode-switch {
+            display: inline-flex;
+            gap: 8px;
+            padding: 6px;
+            margin-top: 18px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        #overlay-card.compact .mode-switch {
+            margin-top: 14px;
+        }
+
+        .mode-button {
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        #overlay-card.compact .mode-button {
+            padding: 9px 14px;
+        }
+
+        .mode-button.active {
+            background: linear-gradient(180deg, var(--accent-2), var(--accent));
+            color: #1d2328;
         }
 
         .lobby-options {
@@ -462,6 +524,168 @@
             font-size: 0.92rem;
         }
 
+        .lobby-panel {
+            margin-top: 18px;
+        }
+
+        #overlay-card.compact .lobby-panel {
+            margin-top: 14px;
+        }
+
+        .section-shell {
+            padding: 16px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        #overlay-card.compact .section-shell {
+            padding: 14px;
+            border-radius: 18px;
+        }
+
+        .online-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(180px, 0.85fr);
+            gap: 12px;
+        }
+
+        #overlay-card.compact .online-grid {
+            gap: 10px;
+        }
+
+        .online-grid input {
+            min-width: 0;
+            border-radius: 18px;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+        }
+
+        #overlay-card.compact .online-grid input {
+            padding: 12px 14px;
+        }
+
+        .online-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        #overlay-card.compact .online-actions {
+            gap: 10px;
+        }
+
+        .online-note {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #overlay-card.compact .online-note {
+            gap: 8px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            font-size: 0.92rem;
+        }
+
+        #overlay-card.compact .status-pill {
+            padding: 8px 10px;
+            font-size: 0.88rem;
+        }
+
+        .presence-list {
+            display: grid;
+            gap: 10px;
+            max-height: 180px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        #overlay-card.compact .presence-list {
+            gap: 8px;
+            max-height: 128px;
+        }
+
+        .presence-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto auto;
+            gap: 10px;
+            align-items: center;
+            padding: 11px 12px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        #overlay-card.compact .presence-row {
+            padding: 9px 10px;
+        }
+
+        .presence-row strong {
+            display: block;
+        }
+
+        .presence-row small {
+            display: block;
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        #overlay-card.compact .presence-row small {
+            font-size: 0.82rem;
+            margin-top: 2px;
+        }
+
+        .presence-state {
+            color: var(--mint);
+            font-size: 0.88rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .field-stack {
+            display: grid;
+            gap: 10px;
+        }
+
+        #overlay-card.compact .field-stack {
+            gap: 8px;
+        }
+
+        .field-stack label {
+            color: var(--muted);
+            font-size: 0.88rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        #overlay-card.compact .field-stack label {
+            font-size: 0.8rem;
+        }
+
+        .online-rows {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        #overlay-card.compact .online-rows {
+            gap: 10px;
+            margin-top: 12px;
+        }
+
         #round-length {
             min-width: 140px;
             border-radius: 14px;
@@ -470,6 +694,11 @@
             background: rgba(255, 255, 255, 0.05);
             color: var(--text);
             font: inherit;
+        }
+
+        #overlay-card.compact #round-length {
+            min-width: 128px;
+            padding: 9px 10px;
         }
 
         #player-input {
@@ -620,6 +849,15 @@
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
+            .mode-switch {
+                width: 100%;
+            }
+
+            .mode-button {
+                flex: 1;
+            }
+
+            .online-grid,
             #name-form {
                 grid-template-columns: 1fr;
             }
@@ -637,22 +875,23 @@
             <div id="brand">
                 <div id="brand-badge">O</div>
                 <div id="brand-copy">
-                    <small>Local Arcade</small>
+                    <small>Arcade Arena</small>
                     <h1>Nova Tap Arena</h1>
-                    <p>Register with only a username, play a 60-second round, and pass the device for local multiplayer battles.</p>
+                    <p>Play solo, pass the device locally, or create an online room and compete with players in other countries.</p>
                 </div>
             </div>
 
             <div class="pill-list">
                 <div class="pill">60-second rounds</div>
                 <div class="pill">Local multiplayer</div>
+                <div class="pill">Online rooms</div>
                 <div class="pill">Persistent highscores</div>
                 <button id="install-app" class="primary hidden" type="button">Install App</button>
             </div>
 
             <section class="section">
                 <h2>How It Works</h2>
-                <p>Type one name and press Start Match for solo play, or add up to four players for pass-and-play. Highest score wins.</p>
+                <p>Play solo, add local players for pass-and-play, or create an online room with live usernames, location, and synced scores.</p>
             </section>
 
             <section class="section">
@@ -687,10 +926,52 @@
                         <h2 id="overlay-title">Register players and start the match.</h2>
                         <p id="overlay-copy">Type one name and press Start Match for solo play, or add more names first for pass-and-play multiplayer.</p>
 
-                        <form id="name-form">
-                            <input id="player-input" type="text" maxlength="18" placeholder="Type one name, then press Start Match" autocomplete="off">
-                            <button class="primary" type="submit">Add Player</button>
-                        </form>
+                        <div class="mode-switch" aria-label="Game mode">
+                            <button id="mode-local" class="mode-button active" type="button">Local</button>
+                            <button id="mode-online" class="mode-button" type="button">Online</button>
+                        </div>
+
+                        <div id="local-panel" class="lobby-panel">
+                            <form id="name-form">
+                                <input id="player-input" type="text" maxlength="18" placeholder="Type one name, then press Start Match" autocomplete="off">
+                                <button class="primary" type="submit">Add Player</button>
+                            </form>
+
+                            <div id="player-tags"></div>
+                        </div>
+
+                        <div id="online-panel" class="lobby-panel hidden">
+                            <div class="section-shell">
+                                <div class="online-grid">
+                                    <div class="field-stack">
+                                        <label for="online-name">Username</label>
+                                        <input id="online-name" type="text" maxlength="18" placeholder="Your username" autocomplete="off">
+                                    </div>
+                                    <div class="field-stack">
+                                        <label for="room-code-input">Room code</label>
+                                        <input id="room-code-input" type="text" maxlength="8" placeholder="Room code" autocomplete="off">
+                                    </div>
+                                </div>
+
+                                <div class="online-rows">
+                                    <div class="online-actions">
+                                        <button id="create-room" class="primary" type="button">Create Room</button>
+                                        <button id="join-room" class="secondary" type="button">Join Room</button>
+                                        <button id="leave-room" class="secondary hidden" type="button">Leave Room</button>
+                                    </div>
+
+                                    <div class="online-note">
+                                        <span id="online-location" class="status-pill">Locating...</span>
+                                        <span id="online-connection" class="status-pill">Offline</span>
+                                        <span id="room-badge" class="status-pill hidden">Room ----</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="section-shell">
+                                <div id="online-presence" class="presence-list"></div>
+                            </div>
+                        </div>
 
                         <div class="lobby-options">
                             <label for="round-length">Round length</label>
@@ -701,7 +982,6 @@
                             </select>
                         </div>
 
-                        <div id="player-tags"></div>
                         <div id="results" class="hidden"></div>
 
                         <div id="overlay-actions">
@@ -719,6 +999,6 @@
         </main>
     </div>
 
-    <script src="./sketch.js?fresh=4"></script>
+    <script type="module" src="./sketch.js?fresh=5"></script>
 </body>
 </html>

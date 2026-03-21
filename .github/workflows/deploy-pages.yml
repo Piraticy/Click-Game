@@ -29,10 +29,18 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Build static site bundle
+        run: |
+          mkdir -p _site
+          cp index.html _site/index.html
+          cp sketch.js _site/sketch.js
+          cp favicon.svg _site/favicon.svg
+          touch _site/.nojekyll
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
